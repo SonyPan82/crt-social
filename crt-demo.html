@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3615 MINITEL</title>
+  <style>
+    :root {
+      --bg: #000000;
+      --green: #2cff2c;
+      --red: #ff0000;
+      --yellow: #ffff00;
+      --blue: #0088ff;
+      --white: #ffffff;
+      --cyan: #00ffff;
+      --magenta: #ff00ff;
+      --dark-green: #1a6b1a;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: "Courier New", Courier, monospace;
+      color: var(--green);
+      font-size: 14px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    .minitel {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+    }
+
+    .screen {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--dark-green);
+    }
+
+    .ui {
+      flex: 1;
+      padding: 16px 20px;
+      overflow-y: auto;
+    }
+
+    .hidden { display: none !important; }
+
+    /* TOPBAR */
+    .topbar {
+      background: var(--green);
+      color: var(--bg);
+      padding: 4px 8px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      border-bottom: 2px solid var(--green);
+      flex-shrink: 0;
+    }
+
+    .topbar-title { flex: 1; text-align: left; }
+    .topbar-clock { text-align: right; }
+
+    /* BREADCRUMB */
+    .breadcrumb {
+      color: var(--yellow);
+      font-size: 12px;
+      padding: 6px 0;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--dark-green);
+    }
+
+    .breadcrumb .sep { color: var(--green); margin: 0 4px; }
+
+    /* MENU-BAR */
+    .menu-bar {
+      color: var(--cyan);
+      font-size: 12px;
+      margin-bottom: 12px;
+      padding: 4px 0;
+    }
+
+    /* TITRES */
+    .title {
+      color: var(--yellow);
+      font-size: 16px;
+      font-weight: bold;
+      margin: 12px 0 6px;
+    }
+
+    .subtitle {
+      color: var(--cyan);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    /* CONTENU */
+    .content {
+      color: var(--green);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .content a, .link {
+      color: var(--white);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .content a:hover, .link:hover {
+      color: var(--yellow);
+      background: rgba(44, 255, 44, 0.15);
+    }
+
+    /* BOXES */
+    .box {
+      border: 1px solid var(--green);
+      padding: 8px;
+      margin: 10px 0;
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .box-title {
+      color: var(--yellow);
+      font-weight: bold;
+      margin-bottom: 6px;
+      border-bottom: 1px dashed var(--green);
+      padding-bottom: 4px;
+    }
+
+    /* NEWS */
+    .news-item {
+      border-bottom: 1px dashed var(--dark-green);
+      padding: 10px 0;
+      margin-bottom: 8px;
+    }
+
+    .news-title {
+      color: var(--yellow);
+      font-weight: bold;
+    }
+
+    .news-date {
+      color: var(--cyan);
+      font-size: 11px;
+    }
+
+    .news-text {
+      color: var(--green);
+      margin-top: 4px;
+      line-height: 1.6;
+    }
+
+    /* LOGIN */
+    .login-box {
+      max-width: 500px;
+      margin: 60px auto 0;
+    }
+
+    .input {
+      width: 100%;
+      max-width: 300px;
+      background: var(--bg);
+      border: 1px solid var(--green);
+      color: var(--green);
+      padding: 6px 8px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      margin: 4px 0 10px;
+    }
+
+    .input:focus {
+      border: 1px solid var(--yellow);
+      background: var(--green);
+      color: var(--bg);
+      box-shadow: inset 0 0 3px rgba(255, 255, 0, 0.3);
+    }
+
+    .error {
+      color: var(--red);
+      font-weight: bold;
+      margin: 8px 0;
+    }
+
+    .success {
+      color: var(--cyan);
+      margin: 8px 0;
+    }
+
+    /* MENU GRID */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .menu-item {
+      border: 1px solid var(--green);
+      padding: 8px;
+      background: var(--bg);
+      cursor: pointer;
+      transition: all 0.1s;
+      min-height: 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .menu-item:hover, .menu-item.active {
+      background: var(--green);
+      color: var(--bg);
+      border-color: var(--yellow);
+    }
+
+    .menu-item-title {
+      font-weight: bold;
+      color: var(--yellow);
+      margin-bottom: 4px;
+    }
+
+    .menu-item:hover .menu-item-title {
+      color: var(--bg);
+    }
+
+    .menu-item-desc {
+      font-size: 12px;
+      color: var(--cyan);
+    }
+
+    .menu-item:hover .menu-item-desc {
+      color: var(--bg);
+    }
+
+    /* LIST MENU */
+    .list-menu {
+      border: 1px solid var(--green);
+      margin: 12px 0;
+    }
+
+    .list-menu-item {
+      display: flex;
+      gap: 12px;
+      padding: 6px 8px;
+      border-bottom: 1px dashed var(--dark-green);
+      cursor: pointer;
+      transition: all 0.1s;
+      align-items: center;
+    }
+
+    .list-menu-item:hover {
+      background: var(--green);
+      color: var(--bg);
+    }
+
+    .list-menu-num {
+      color: var(--yellow);
+      font-weight: bold;
+      width: 30px;
+      text-align: center;
+    }
+
+    .list-menu-label {
+      color: var(--white);
+      flex: 1;
+      font-weight: bold;
+    }
+
+    .list-menu-desc {
+      color: var(--cyan);
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .list-menu-item:hover .list-menu-num,
+    .list-menu-item:hover .list-menu-label {
+      color: var(--bg);
+    }
+
+    .list-menu-item:hover .list-menu-desc {
+      color: var(--bg);
+    }
+
+    /* FOOTER NAV */
+    .footer-nav {
+      margin-top: 16px;
+      padding-top: 8px;
+      border-top: 1px solid var(--green);
+      color: var(--yellow);
+      font-size: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn-nav {
+      display: inline-block;
+      border: 1px solid var(--green);
+      padding: 4px 8px;
+      cursor: pointer;
+      background: var(--bg);
+      color: var(--yellow);
+      min-width: 80px;
+      text-align: center;
+      transition: all 0.1s;
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-nav:hover {
+      background: var(--green);
+      color: var(--bg);
+      border-color: var(--yellow);
+    }
+
+    .kbd {
+      color: var(--white);
+      font-weight: bold;
+    }
+
+    /* WEATHER */
+    .weather-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin: 12px 0;
+    }
+
+    .weather-item {
+      border: 1px solid var(--green);
+      padding: 10px;
+      background: var(--bg);
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .weather-item:hover {
+      background: var(--green);
+      color: var(--bg);
+    }
+
+    .weather-city {
+      color: var(--cyan);
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .weather-item:hover .weather-city {
+      color: var(--bg);
+    }
+
+    .weather-temp {
+      color: var(--yellow);
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .weather-item:hover .weather-temp {
+      color: var(--bg);
+    }
+
+    .weather-desc {
+      color: var(--green);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .weather-item:hover .weather-desc {
+      color: var(--bg);
+    }
+
+    /* FRANCE MAP */
+    .france-map {
+      color: var(--green);
+      font-family: monospace;
+      font-size: 11px;
+      line-height: 1.3;
+      margin: 12px 0;
+      border: 1px solid var(--green);
+      padding: 10px;
+      overflow-x: auto;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .region {
+      cursor: pointer;
+      transition: color 0.1s;
+      text-decoration: underline;
+    }
+
+    .region:hover {
+      color: var(--yellow);
+    }
+
+    /* FORMS */
+    .form-group {
+      margin: 10px 0;
+    }
+
+    .form-label {
+      color: var(--yellow);
+      display: block;
+      margin-bottom: 4px;
+      font-weight: bold;
+    }
+
+    textarea {
+      width: 100%;
+      max-width: 500px;
+      background: var(--bg);
+      border: 1px solid var(--green);
+      color: var(--green);
+      padding: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    textarea:focus {
+      border-color: var(--yellow);
+      outline: none;
+    }
+
+    button {
+      background: var(--bg);
+      border: 1px solid var(--green);
+      color: var(--yellow);
+      padding: 6px 12px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      transition: all 0.1s;
+      min-height: 28px;
+    }
+
+    button:hover {
+      background: var(--green);
+      color: var(--bg);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      body { font-size: 13px; }
+      .screen { padding: 0; }
+      .ui { padding: 12px 16px; }
+      .menu-grid { grid-template-columns: 1fr; }
+      .weather-grid { grid-template-columns: 1fr; }
+      .topbar { font-size: 12px; padding: 3px 6px; }
+      .breadcrumb { font-size: 11px; }
+      .title { font-size: 15px; }
+    }
+
+    /* SCROLLBAR */
+    .screen::-webkit-scrollbar,
+    .ui::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    .screen::-webkit-scrollbar-track,
+    .ui::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    .screen::-webkit-scrollbar-thumb,
+    .ui::-webkit-scrollbar-thumb {
+      background: var(--dark-green);
+      border: 2px solid var(--bg);
+    }
+
+    .screen::-webkit-scrollbar-thumb:hover,
+    .ui::-webkit-scrollbar-thumb:hover {
+      background: var(--green);
+    }
+  </style>
+</head>
+<body>
+  <div class="minitel">
+    <div class="screen">
+      <div class="topbar">
+        <div class="topbar-title" id="topbar-title">3615 MINITEL</div>
+        <div class="topbar-clock" id="topbar-clock">00:00</div>
+      </div>
+
+      <div class="ui">
+
+        <!-- ============ LOGIN ============ -->
+        <section id="screen-login">
+          <div class="menu-bar">ACCES - Veuillez vous identifier</div>
+
+          <div class="login-box">
+            <h1 class="title">>>> CONNEXION <<<</h1>
+            <div class="subtitle">Acces securise au terminal Minitel</div>
+
+            <div class="content" style="margin: 16px 0;">
+              Identifiants de demonstration :<br/>
+              <span class="kbd">admin</span> / <span class="kbd">admin</span>
+            </div>
+
+            <form id="login-form">
+              <div class="form-group">
+                <label class="form-label" for="username">LOGIN :</label>
+                <input class="input" id="username" name="username" type="text" value="admin" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="password">MDP :</label>
+                <input class="input" id="password" name="password" type="password" value="admin" />
+              </div>
+            </form>
+
+            <div id="login-error" class="error"></div>
+
+            <div class="footer-nav">
+              <span class="btn-nav"><span class="kbd">1</span> CONNEXION</span>
+              <span class="btn-nav"><span class="kbd">0</span> EFFACER</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ HOME ============ -->
+        <section id="screen-home" class="hidden">
+          <div class="menu-bar">SOMMAIRE - Services disponibles</div>
+
+          <h1 class="title">*ACCUEIL*</selectitem>
+          <div class="subtitle">Choisissez un service</div>
+
+          <div class="menu-grid">
+            <div class="menu-item" data-target="screen-actualites-menu">
+              <div class="menu-item-title">1 - ACTUALITES</div>
+              <div class="menu-item-desc">Infos France & Monde</div>
+            </div>
+            <div class="menu-item" data-target="screen-meteo-menu">
+              <div class="menu-item-title">2 - METEO</div>
+              <div class="menu-item-desc">Previsions France</div>
+            </div>
+            <div class="menu-item" data-target="screen-tv-menu">
+              <div class="menu-item-title">3 - PROGRAMME TV</div>
+              <div class="menu-item-desc">Guide des chaines</div>
+            </div>
+            <div class="menu-item" data-target="screen-minitwitt-menu">
+              <div class="menu-item-title">4 - MINITWITT</div>
+              <div class="menu-item-desc">Messagerie retro</div>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1</span> ACTUALITES</span>
+            <span class="btn-nav"><span class="kbd">2</span> METEO</span>
+            <span class="btn-nav"><span class="kbd">3</span> TV</span>
+            <span class="btn-nav"><span class="kbd">4</span> MINITWITT</span>
+            <span class="btn-nav"><span class="kbd">0</span> QUITTER</span>
+          </div>
+        </section>
+
+        <!-- ============ ACTUALITES - MENU ============ -->
+        <section id="screen-actualites-menu" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span> ACTUALITES
+          </div>
+          <div class="menu-bar">ACTUALITES - Choisissez une categorie</div>
+
+          <h1 class="title">CATEGORIES</h1>
+
+          <div class="list-menu">
+            <div class="list-menu-item" data-target="screen-actualites-politique">
+              <span class="list-menu-num">1</span>
+              <span class="list-menu-label">POLITIQUE</span>
+              <span class="list-menu-desc">France & Monde</span>
+            </div>
+            <div class="list-menu-item" data-target="screen-actualites-international">
+              <span class="list-menu-num">2</span>
+              <span class="list-menu-label">INTERNATIONAL</span>
+              <span class="list-menu-desc">Infos mondiales</span>
+            </div>
+            <div class="list-menu-item" data-target="screen-actualites-sport">
+              <span class="list-menu-num">3</span>
+              <span class="list-menu-label">SPORT</span>
+              <span class="list-menu-desc">Tour de France</span>
+            </div>
+            <div class="list-menu-item" data-target="screen-actualites-culture">
+              <span class="list-menu-num">4</span>
+              <span class="list-menu-label">CULTURE</span>
+              <span class="list-menu-desc">Cinema & Arts</span>
+            </div>
+            <div class="list-menu-item" data-target="screen-actualites-technologie">
+              <span class="list-menu-num">5</span>
+              <span class="list-menu-label">TECHNOLOGIE</span>
+              <span class="list-menu-desc">Informatique</span>
+            </div>
+            <div class="list-menu-item" data-target="screen-actualites-economie">
+              <span class="list-menu-num">6</span>
+              <span class="list-menu-label">ECONOMIE</span>
+              <span class="list-menu-desc">Bourse & Emplois</span>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1-6</span> CATEGORIE</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ ACTUALITES - POLITIQUE ============ -->
+        <section id="screen-actualites-politique" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span>
+            <span class="link" data-target="screen-actualites-menu">ACTUALITES</span>
+            <span class="sep">></span> POLITIQUE
+          </div>
+          <div class="menu-bar">ACTUALITES - POLITIQUE - 15 JUILLET 1997</div>
+
+          <div class="content">
+            <div class="news-item">
+              <div class="news-title">>> FRANCE - Cohabitation gouvernementale</div>
+              <div class="news-date">14/07/1997 - 18:30</div>
+              <div class="news-text">Jacques Chirac nomme Lionel Jospin Premier ministre apres la victoire de la gauche aux legislatives. Premiere cohabitation depuis 1993. La nouvelle majorite se prepare a gouverner avec un programme de reduction du temps de travail.</div>
+            </div>
+
+            <div class="news-item">
+              <div class="news-title">>> EUROPE - Traite d'Amsterdam</div>
+              <div class="news-date">14/07/1997 - 16:00</div>
+              <div class="news-text">Les chefs d'Etat europeens finalisent le traite d'Amsterdam. Les discussions autour de l'emploi et de la coordination economique marquent la fin du sommet. L'Europe se prepare a l'elargissement vers l'Est.</div>
+            </div>
+
+            <div class="news-item">
+              <div class="news-title">>> MONDE - Clinton et la diplomatie</div>
+              <div class="news-date">13/07/1997 - 14:15</div>
+              <div class="news-text">Le president americain Bill Clinton poursuit ses efforts diplomatiques au Moyen-Orient. Les negociations israelo-palestiniennes se poursuivent sous l'egide americaine. Espoir d'une reprise des pourparlers.</div>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1</span> PRECEDENT</span>
+            <span class="btn-nav"><span class="kbd">2</span> SUIVANT</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ ACTUALITES - INTERNATIONAL ============ -->
+        <section id="screen-actualites-international" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span>
+            <span class="link" data-target="screen-actualites-menu">ACTUALITES</span>
+            <span class="sep">></span> INTERNATIONAL
+          </div>
+          <div class="menu-bar">ACTUALITES - INTERNATIONAL - 15 JUILLET 1997</div>
+
+          <div class="content">
+            <div class="news-item">
+              <div class="news-title">>> HONG KONG - Retrocession a la Chine</div>
+              <div class="news-date">30/06/1997 - 23:59</div>
+              <div class="news-text">Hong Kong retourne a la Chine apres 156 ans de domination britannique. A minuit pile, le drapeau britannique descend du parlement et le drapeau chinois monte. Une ceremonie historique se deroule en presence de princes et de dirigeants mondiaux. Chris Patten, le dernier gouverneur, quitte l'ile emotif.</div>
+            </div>
+
+            <div class="news-item">
+              <div class="news-title">>> AFRIQUE - Situation au Congo</div>
+              <div class="news-date">14/07/1997 - 17:45</div>
+              <div class="news-text">Laurent Desire Kabila consolide son pouvoir au Congo apres la chute de Mobutu. Les negociations avec le Rwanda et l'Ouganda se poursuivent. La communaute internationale observe la situation avec attention.</div>
+            </div>
+
+            <div class="news-item">
+              <div class="news-title">>> ASIE - Crise financiere imminente</div>
+              <div class="news-date">13/07/1997 - 11:20</div>
+              <div class="news-text">La Thailande devalue sa monnaie suite a des troubles economiques. Les marches financiers asiatiques tremblent. Les economistes s'inquietent d'une contagion regionale. Les gouvernements mettent en place des mesures de stabilisation.</div>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1</span> PRECEDENT</span>
+            <span class="btn-nav"><span class="kbd">2</span> SUIVANT</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ ACTUALITES - SPORT ============ -->
+        <section id="screen-actualites-sport" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span>
+            <span class="link" data-target="screen-actualites-menu">ACTUALITES</span>
+            <span class="sep">></span> SPORT
+          </div>
+          <div class="menu-bar">ACTUALITES - SPORT - 15 JUILLET 1997</div>
+
+          <div class="content">
+            <div class="news-item">
+              <div class="news-title">>> CYCLISME - Tour de France en suspense</div>
+              <div class="news-date">14/07/1997 - 19:30</div>
+              <div class="news-text">Jan Ullrich surprend les favoris et prend l'avantage au classement general. Le jeune cycliste allemand de 23 ans domine dans les Pyrenees. Les Alpes seront decisives cette semaine. Froome s'accroche mais Ullrich parait inarretable.</div>
+            </div>
+
+            <div class="news-item">
+              <div class="news-title">>> TENNIS - Wimbledon fini</div>
+              <div class="news-date">12/07/1997 - 15:00</div>
+              <div class="news-text">Pete Sampras conserve sa couronne a Wimbledon. Le joueur americain remporte le titre pour la 4eme fois. Martina Hingis, la jeune prodige suisse, gagne chez les dames a 16 ans. Un exploit remarquable pour la releve.</div>
+            </div>
+
+            <div class="news-item">
+              <div class="news-title">>> FOOTBALL - Mercato estival</div>
+              <div class="news-date">10/07/1997 - 10:45</div>
+              <div class="news-text">Les clubs europeens s'affairent sur le mercato estival. Vieira et Petit quittent Arsenal. Ronaldo fait ses debuts au PSG. Cantona pense a la retraite apres une belle carriere a Manchester United.</div>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1</span> PRECEDENT</span>
+            <span class="btn-nav"><span class="kbd">2</span> SUIVANT</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ ACTUALITES - CULTURE ============ -->
+        <section id="screen-actualites-culture" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span>
+            <span class="link" data-target="screen-actualites-menu">ACTUALITES</span>
+            <span class="sep">></span> CULTURE
+          </div>
+          <div class="menu-bar">ACTUALITES - CULTURE - 15 JUILLET 1997</div>
+
+          <div class="content">
+            <div class="news-item">
+              <div class="news-title">>> CINEMA - Titanic en pre-lancement</div>
+              <div class="news-date">14/07/1997 - 15:20</div>
+              <div class="news-text">James Cameron finalise son epopee maritime "Titanic". Le film sortira en decembre 1997 en France. Avec Leonardo DiCaprio et Kate Winslet, c'est l'esperanto du cinema hollywoodien. Un naufrage d'amour sur le pont du navire legendaire. Budget colossal : 200 millions de dollars !</div>
+            </div>
+
+            <div class="news-item">
+              <div class="news-title">>> MUSIQUE - Britney Spears emerge</div>
+              <div class="news-date">12/07/1997 - 13:45</div>
+              <div class="news-text">Une nouvelle star fait ses debuts aux Etats-Unis. Britney Spears, 15 ans, lance sa carriere avec "...Baby One More Time". Les maisons de disques mondiales s'interessent a cette jeune artiste. Le pop-business sent une nouvelle manne.</div>
+            </div>
+
+            <div class="news-item">
+              <div class="news-title">>> LITTERATURE - Joël Dicker publie</div>
+              <div class="news-date">08/07/1997 - 11:00</div>
+              <div class="news-text">Un nouveau roman noir francais fait parler de lui. L'intrigue se deroule dans les Alpes. Les lecteurs apprecient ce style nouveau. Les critiques sont partagees mais le bouche-a-oreille fonctionne.</div>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1</span> PRECEDENT</span>
+            <span class="btn-nav"><span class="kbd">2</span> SUIVANT</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ ACTUALITES - TECHNOLOGIE ============ -->
+        <section id="screen-actualites-technologie" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span>
+            <span class="link" data-target="screen-actualites-menu">ACTUALITES</span>
+            <span class="sep">></span> TECHNOLOGIE
+          </div>
+          <div class="menu-bar">ACTUALITES - TECHNOLOGIE - 15 JUILLET 1997</div>
+
+          <div class="content">
+            <div class="news-item">
+              <div class="news-title">>> PROCESSEURS - Pentium II revolution</div>
+              <div class="news-date">14/07/1997 - 13:15</div>
+              <div class="news-text">Intel lance le Pentium II jusqu'a 233 MHz. Une revolution dans le monde informatique personnel. Les ordinateurs deviennent plus puissants. Les jeux vidéo profitent de ces ameliorations. AMD repond avec le K6. La guerre des processeurs fait rage.</div>
+            </div>
+
+            <div class="news-item">
+              <div class="news-title">>> INTERNET - Boom du web francais</div>
+              <div class="news-date">12/07/1997 - 16:30</div>
+              <div class="news-text">Les sites francais se multiplient. AOL, Wanadoo, Club-Internet proposent des acces bas debit. Les modems 56K revolutionnent la connexion. Les francais decouvrent le web. E-commerce et portails voient le jour.</div>
+            </div>
+
+            <div class="news-item">
+              <div class="news-title">>> TELECOMMUNICATIONS - Mobile 2G</div>
+              <div class="news-date">10/07/1997 - 09:00</div>
+              <div class="news-text">Les telephones mobiles GSM se popularisent. Alcatel, Nokia et Motorola dominent le marche. Les abonnements augmentent massivement. SMS commence a etre une realite. Les operateurs se preparent a la 3G.</div>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1</span> PRECEDENT</span>
+            <span class="btn-nav"><span class="kbd">2</span> SUIVANT</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ ACTUALITES - ECONOMIE ============ -->
+        <section id="screen-actualites-economie" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span>
+            <span class="link" data-target="screen-actualites-menu">ACTUALITES</span>
+            <span class="sep">></span> ECONOMIE
+          </div>
+          <div class="menu-bar">ACTUALITES - ECONOMIE - 15 JUILLET 1997</div>
+
+          <div class="content">
+            <div class="news-item">
+              <div class="news-title">>> BOURSE - CAC 40 en hausse</div>
+              <div class="news-date">14/07/1997 - 11:00</div>
+              <div class="news-text">La Bourse de Paris poursuit sa progression. Le CAC 40 atteint de nouveaux records. L'optimisme economique europeen pousse les investisseurs a acheter. Les secteurs financiers et technologiques tirent le marche. Les analystes restent positifs.</div>
+            </div>
+
+            <div class="news-item">
+              <div class="news-title">>> EMPLOI - Reformes gouvernementales</div>
+              <div class="news-date">13/07/1997 - 14:20</div>
+              <div class="news-text">Le nouveau gouvernement promet une reduction du temps de travail. 35 heures hebdomadaires sont au programme. Les negociations avec les syndicats commencent. Les entreprises s'inquietent des couts supplementaires. Un grand debat s'engage.</div>
+            </div>
+
+            <div class="news-item">
+              <div class="news-title">>> EURO - Preparation finale</div>
+              <div class="news-date">11/07/1997 - 10:30</div>
+              <div class="news-text">Les preparatifs pour le lancement de l'euro se poursuivent. Les pays europeens se preparent a cette transformation majeure. Les systemes informatiques sont mis a jour. Les citoyens apprennent les nouveaux taux de change.</div>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1</span> PRECEDENT</span>
+            <span class="btn-nav"><span class="kbd">2</span> SUIVANT</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ METEO - MENU ============ -->
+        <section id="screen-meteo-menu" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span> METEO
+          </div>
+          <div class="menu-bar">METEO FRANCE - Previsions 24h</div>
+
+          <h1 class="title">PREVISIONS PAR VILLE</h1>
+
+          <div class="weather-grid" id="weather-grid">
+            <div class="weather-item" data-region="paris">
+              <div class="weather-city">PARIS (IDF)</div>
+              <div class="weather-temp" id="temp-paris">+24°C</div>
+              <div class="weather-desc" id="desc-paris">Chargement...</div>
+            </div>
+            <div class="weather-item" data-region="marseille">
+              <div class="weather-city">MARSEILLE (PACA)</div>
+              <div class="weather-temp" id="temp-marseille">+28°C</div>
+              <div class="weather-desc" id="desc-marseille">Chargement...</div>
+            </div>
+            <div class="weather-item" data-region="lyon">
+              <div class="weather-city">LYON (RHONE)</div>
+              <div class="weather-temp" id="temp-lyon">+22°C</div>
+              <div class="weather-desc" id="desc-lyon">Chargement...</div>
+            </div>
+            <div class="weather-item" data-region="lille">
+              <div class="weather-city">LILLE (NORD)</div>
+              <div class="weather-temp" id="temp-lille">+19°C</div>
+              <div class="weather-desc" id="desc-lille">Chargement...</div>
+            </div>
+            <div class="weather-item" data-region="bordeaux">
+              <div class="weather-city">BORDEAUX (AQUITAINE)</div>
+              <div class="weather-temp" id="temp-bordeaux">+26°C</div>
+              <div class="weather-desc" id="desc-bordeaux">Chargement...</div>
+            </div>
+            <div class="weather-item" data-region="strasbourg">
+              <div class="weather-city">STRASBOURG (ALSACE)</div>
+              <div class="weather-temp" id="temp-strasbourg">+23°C</div>
+              <div class="weather-desc" id="desc-strasbourg">Chargement...</div>
+            </div>
+          </div>
+
+          <h1 class="title">CARTE INTERACTIVE</h1>
+
+          <div class="france-map">
+            <pre>
+        BRETAGNE  │ NORMANDIE  │ PICARDIE
+    ────────────────────────────────────
+      PAYS      │            │ NORD
+      DE LOIRE  │ ILE DE FR  │ ALSACE
+                │            │
+    ────────────────────────────────────
+   AQUITAINE    │ LIMOUSIN   │AUVERGNE
+   (BORDEAUX)   │            │
+    ────────────────────────────────────
+                │ RHONE      │ ALPES
+    PROVENCE    │ ALPES      │
+    LANGUEDOC   │            │
+    (MARSEILLE) │ JURA       │
+    ────────────────────────────────────
+                │ PACA       │
+            </pre>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1</span> DETAILS</span>
+            <span class="btn-nav"><span class="kbd">2</span> CARTE</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ PROGRAMME TV - MENU ============ -->
+        <section id="screen-tv-menu" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span> PROGRAMME TV
+          </div>
+          <div class="menu-bar">PROGRAMME TV - 15 JUILLET 1997</div>
+
+          <h1 class="title">MENU</h1>
+
+          <div class="list-menu">
+            <div class="list-menu-item" data-target="screen-tv-soir">
+              <span class="list-menu-num">1</span>
+              <span class="list-menu-label">CE SOIR (20h30-23h30)</span>
+              <span class="list-menu-desc">Programmes</span>
+            </div>
+            <div class="list-menu-item" data-target="screen-tv-chaines">
+              <span class="list-menu-num">2</span>
+              <span class="list-menu-label">PAR CHAINES</span>
+              <span class="list-menu-desc">Toutes les chaines</span>
+            </div>
+            <div class="list-menu-item" data-target="screen-tv-demain">
+              <span class="list-menu-num">3</span>
+              <span class="list-menu-label">DEMAIN (20h30-23h30)</span>
+              <span class="list-menu-desc">Demain soir</span>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1-3</span> MENU</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ PROGRAMME TV - CE SOIR ============ -->
+        <section id="screen-tv-soir" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span>
+            <span class="link" data-target="screen-tv-menu">PROGRAMME TV</span>
+            <span class="sep">></span> CE SOIR
+          </div>
+          <div class="menu-bar">PROGRAMME TV - CE SOIR 20h30 - 23h30</div>
+
+          <div class="content">
+            <div class="box">
+              <div class="box-title">01 - TF1</div>
+              <div>20:50 LA VERITE SI JE MENS ! → 23:00</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">Film francais, Coline Serreau. Avec Thierry Lhermitte.</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title">02 - FRANCE 2</div>
+              <div>20:55 FORT BOYARD → 22:35</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">Jeu d'aventure, Olivier Minne</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title">03 - FRANCE 3</div>
+              <div>20:40 DES RACINES ET DES AILES → 22:15</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">Documentaire patrimoine culturel</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title">04 - CANAL+</div>
+              <div>21:00 LE JOURNAL DU CINEMA → 21:40</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">Magazine cinematographique</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title">07 - ARTE</div>
+              <div>20:45 LE DESSOUS DES CARTES → 21:15</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">Analyse geopolitique et cartes</div>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1</span> DETAIL</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ PROGRAMME TV - PAR CHAINES ============ -->
+        <section id="screen-tv-chaines" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span>
+            <span class="link" data-target="screen-tv-menu">PROGRAMME TV</span>
+            <span class="sep">></span> CHAINES
+          </div>
+          <div class="menu-bar">PROGRAMME TV - TOUTES LES CHAINES</div>
+
+          <h1 class="title">CHAINES FRANCAISES</h1>
+
+          <div class="list-menu">
+            <div class="list-menu-item">
+              <span class="list-menu-num">01</span>
+              <span class="list-menu-label">TF1</span>
+              <span class="list-menu-desc">Principale</span>
+            </div>
+            <div class="list-menu-item">
+              <span class="list-menu-num">02</span>
+              <span class="list-menu-label">FRANCE 2</span>
+              <span class="list-menu-desc">Antenne 2</span>
+            </div>
+            <div class="list-menu-item">
+              <span class="list-menu-num">03</span>
+              <span class="list-menu-label">FRANCE 3</span>
+              <span class="list-menu-desc">Regionale</span>
+            </div>
+            <div class="list-menu-item">
+              <span class="list-menu-num">04</span>
+              <span class="list-menu-label">CANAL+</span>
+              <span class="list-menu-desc">Payante</span>
+            </div>
+            <div class="list-menu-item">
+              <span class="list-menu-num">05</span>
+              <span class="list-menu-label">LA CINQUIEME</span>
+              <span class="list-menu-desc">Jeunesse</span>
+            </div>
+            <div class="list-menu-item">
+              <span class="list-menu-num">06</span>
+              <span class="list-menu-label">M6</span>
+              <span class="list-menu-desc">Musicale</span>
+            </div>
+            <div class="list-menu-item">
+              <span class="list-menu-num">07</span>
+              <span class="list-menu-label">ARTE</span>
+              <span class="list-menu-desc">Culturelle</span>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1-7</span> CHAINE</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ PROGRAMME TV - DEMAIN ============ -->
+        <section id="screen-tv-demain" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span>
+            <span class="link" data-target="screen-tv-menu">PROGRAMME TV</span>
+            <span class="sep">></span> DEMAIN
+          </div>
+          <div class="menu-bar">PROGRAMME TV - DEMAIN 16 JUILLET 1997 (20h30-23h30)</div>
+
+          <div class="content">
+            <div class="box">
+              <div class="box-title">01 - TF1</div>
+              <div>20:50 MIROIR MON AMOUR → 23:00</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">Film romantique francais</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title">02 - FRANCE 2</div>
+              <div>20:55 SAUVE-MOI → 22:35</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">Drama medical francais</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title">03 - FRANCE 3</div>
+              <div>20:40 REGIONS DU MONDE → 22:15</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">Documentaire voyage</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title">04 - CANAL+</div>
+              <div>21:00 FILM AMERICAIN RECENT → 23:00</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">Production USA</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title">07 - ARTE</div>
+              <div>20:45 HISTOIRE ET CIVILISATIONS → 21:30</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">Documentaire historique</div>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ MINITWITT - MENU ============ -->
+        <section id="screen-minitwitt-menu" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span> MINITWITT
+          </div>
+          <div class="menu-bar">MINITWITT - Messagerie retro</div>
+
+          <h1 class="title">MENU MINITWITT</h1>
+
+          <div class="list-menu">
+            <div class="list-menu-item" data-target="screen-minitwitt-fil">
+              <span class="list-menu-num">1</span>
+              <span class="list-menu-label">FIL PUBLIC</span>
+              <span class="list-menu-desc">Messages</span>
+            </div>
+            <div class="list-menu-item" data-target="screen-minitwitt-tendances">
+              <span class="list-menu-num">2</span>
+              <span class="list-menu-label">TENDANCES</span>
+              <span class="list-menu-desc">Hashtags</span>
+            </div>
+            <div class="list-menu-item" data-target="screen-minitwitt-nouveau">
+              <span class="list-menu-num">3</span>
+              <span class="list-menu-label">NOUVEAU MESSAGE</span>
+              <span class="list-menu-desc">Poster un message</span>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1-3</span> MENU</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ MINITWITT - FIL ============ -->
+        <section id="screen-minitwitt-fil" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span>
+            <span class="link" data-target="screen-minitwitt-menu">MINITWITT</span>
+            <span class="sep">></span> FIL PUBLIC
+          </div>
+          <div class="menu-bar">MINITWITT - FIL PUBLIC - 15 JUILLET 1997</div>
+
+          <div class="content">
+            <div class="box">
+              <div class="box-title">>> JULIE_75</div>
+              <div>Coucou ! Test du nouveau Minitwitt depuis mon salon 📟</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">il y a 2 min · Repondre · Partager</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title">>> RETROGEEK</div>
+              <div>Quelqu'un se souvient de ce jeu DOS avec l'interface verte et grosses disquettes ? #nostalgie</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">il y a 10 min · Repondre · Partager</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title">>> MINITELIX</div>
+              <div>Les nouveaux processeurs Intel Pentium II changent vraiment la donne pour les jeux 3D</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">il y a 35 min · Repondre · Partager</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title">>> CINECLUB_93</div>
+              <div>Le Titanic de James Cameron est termine ! Sortie decembre en France. Ca va etre enorme !</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">il y a 1 h · Repondre · Partager</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title">>> HONGKONGER</div>
+              <div>Hong Kong retourne a la Chine aujourd'hui. Moment historique incontournable. Respect !</div>
+              <div style="color: var(--cyan); font-size: 12px; margin-top: 4px;">il y a 3 h · Repondre · Partager</div>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1</span> HAUT</span>
+            <span class="btn-nav"><span class="kbd">2</span> BAS</span>
+            <span class="btn-nav"><span class="kbd">3</span> REPONDRE</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ MINITWITT - TENDANCES ============ -->
+        <section id="screen-minitwitt-tendances" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span>
+            <span class="link" data-target="screen-minitwitt-menu">MINITWITT</span>
+            <span class="sep">></span> TENDANCES
+          </div>
+          <div class="menu-bar">MINITWITT - TENDANCES - 15 JUILLET 1997</div>
+
+          <h1 class="title">TOP HASHTAGS</h1>
+
+          <div class="content">
+            <div class="box">
+              <div style="color: var(--yellow); margin-bottom: 4px;">1. #HONGKONG</div>
+              <div style="font-size: 12px; color: var(--cyan);">12,543 messages</div>
+            </div>
+
+            <div class="box">
+              <div style="color: var(--yellow); margin-bottom: 4px;">2. #TOURDEFRANCE</div>
+              <div style="font-size: 12px; color: var(--cyan);">8,234 messages</div>
+            </div>
+
+            <div class="box">
+              <div style="color: var(--yellow); margin-bottom: 4px;">3. #TITANIC</div>
+              <div style="font-size: 12px; color: var(--cyan);">6,789 messages</div>
+            </div>
+
+            <div class="box">
+              <div style="color: var(--yellow); margin-bottom: 4px;">4. #PENTIUM2</div>
+              <div style="font-size: 12px; color: var(--cyan);">5,432 messages</div>
+            </div>
+
+            <div class="box">
+              <div style="color: var(--yellow); margin-bottom: 4px;">5. #NOSTALGIE</div>
+              <div style="font-size: 12px; color: var(--cyan);">4,123 messages</div>
+            </div>
+
+            <div class="box">
+              <div style="color: var(--yellow); margin-bottom: 4px;">6. #MINITEL</div>
+              <div style="font-size: 12px; color: var(--cyan);">3,456 messages</div>
+            </div>
+
+            <div class="box">
+              <div style="color: var(--yellow); margin-bottom: 4px;">7. #COHABITATION</div>
+              <div style="font-size: 12px; color: var(--cyan);">2,876 messages</div>
+            </div>
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1</span> LIRE</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+        <!-- ============ MINITWITT - NOUVEAU ============ -->
+        <section id="screen-minitwitt-nouveau" class="hidden">
+          <div class="breadcrumb">
+            <span class="link" data-target="screen-home">ACCUEIL</span>
+            <span class="sep">></span>
+            <span class="link" data-target="screen-minitwitt-menu">MINITWITT</span>
+            <span class="sep">></span> NOUVEAU MESSAGE
+          </div>
+          <div class="menu-bar">MINITWITT - COMPOSEZ UN MESSAGE</div>
+
+          <h1 class="title">NOUVEAU MESSAGE</h1>
+
+          <form id="minitwitt-form">
+            <div class="form-group">
+              <label class="form-label">PSEUDO :</label>
+              <input class="input" type="text" id="minitwitt-user" placeholder="Votre pseudo" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">MESSAGE (140 caracteres max) :</label>
+              <textarea id="minitwitt-message" placeholder="Entrez votre message..."></textarea>
+              <div style="font-size: 12px; color: var(--cyan); margin-top: 4px;">
+                <span id="char-count">0</span>/140 caracteres
+              </div>
+            </div>
+
+            <div class="form-group">
+              <button type="submit" id="send-minitwitt">ENVOYER</button>
+              <button type="reset" style="margin-left: 8px;">EFFACER</button>
+            </div>
+          </form>
+
+          <div id="minitwitt-message-sent" class="success hidden">
+            >>> Message envoye ! Merci de votre participation.
+          </div>
+
+          <div class="footer-nav">
+            <span class="btn-nav"><span class="kbd">1</span> ENVOYER</span>
+            <span class="btn-nav"><span class="kbd">0</span> RETOUR</span>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const screens = [
+      'screen-login', 'screen-home',
+      'screen-actualites-menu', 'screen-actualites-politique', 'screen-actualites-international',
+      'screen-actualites-sport', 'screen-actualites-culture', 'screen-actualites-technologie', 'screen-actualites-economie',
+      'screen-meteo-menu',
+      'screen-tv-menu', 'screen-tv-soir', 'screen-tv-chaines', 'screen-tv-demain',
+      'screen-minitwitt-menu', 'screen-minitwitt-fil', 'screen-minitwitt-tendances', 'screen-minitwitt-nouveau'
+    ];
+
+    function showScreen(id) {
+      screens.forEach(screenId => {
+        const el = document.getElementById(screenId);
+        if (el) el.classList.toggle('hidden', screenId !== id);
+      });
+      window.scrollTo(0, 0);
+    }
+
+    function formatClock() {
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    }
+
+    function refreshClock() {
+      const el = document.getElementById('topbar-clock');
+      if (el) el.textContent = formatClock();
+    }
+
+    refreshClock();
+    setInterval(refreshClock, 1000);
+
+    // LOGIN
+    const loginForm = document.getElementById('login-form');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginError = document.getElementById('login-error');
+
+    function tryLogin() {
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (username === 'admin' && password === 'admin') {
+        loginError.textContent = '';
+        showScreen('screen-home');
+      } else {
+        loginError.textContent = '>>> ERREUR - Login ou mot de passe incorrect';
+      }
+    }
+
+    loginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      tryLogin();
+    });
+
+    // KEYBOARD NAVIGATION
+    document.addEventListener('keydown', (e) => {
+      const activeScreen = screens.find(id => !document.getElementById(id).classList.contains('hidden'));
+
+      if (activeScreen === 'screen-login') {
+        if (e.key === 'Enter' || e.key === '1') {
+          e.preventDefault();
+          tryLogin();
+        }
+        if (e.key === '0') {
+          usernameInput.value = '';
+          passwordInput.value = '';
+          loginError.textContent = '';
+        }
+      } else if (activeScreen === 'screen-home') {
+        if (e.key === '1') showScreen('screen-actualites-menu');
+        if (e.key === '2') showScreen('screen-meteo-menu');
+        if (e.key === '3') showScreen('screen-tv-menu');
+        if (e.key === '4') showScreen('screen-minitwitt-menu');
+        if (e.key === '0') showScreen('screen-login');
+      } else {
+        if ((e.key === '0' || e.key === 'Escape') && activeScreen !== 'screen-home') {
+          e.preventDefault();
+          showScreen('screen-home');
+        }
+      }
+    });
+
+    // CLICK NAVIGATION
+    document.addEventListener('click', (e) => {
+      const linkEl = e.target.closest('.link');
+      if (linkEl && linkEl.dataset.target) {
+        e.preventDefault();
+        showScreen(linkEl.dataset.target);
+      }
+
+      const menuItem = e.target.closest('.menu-item[data-target], .list-menu-item[data-target]');
+      if (menuItem && menuItem.dataset.target) {
+        showScreen(menuItem.dataset.target);
+      }
+
+      const btnNav = e.target.closest('.btn-nav');
+      if (btnNav) {
+        const text = btnNav.textContent;
+        if (text.includes('RETOUR') || text.includes('RETOUR')) {
+          showScreen('screen-home');
+        }
+      }
+    });
+
+    // MINITWITT FORM
+    const minittForm = document.getElementById('minitwitt-form');
+    const charCountEl = document.getElementById('char-count');
+    const messageEl = document.getElementById('minitwitt-message');
+
+    messageEl.addEventListener('input', () => {
+      const count = messageEl.value.length;
+      charCountEl.textContent = Math.min(count, 140);
+      if (count > 140) {
+        messageEl.value = messageEl.value.substring(0, 140);
+      }
+    });
+
+    minittForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const user = document.getElementById('minitwitt-user').value.trim();
+      const msg = messageEl.value.trim();
+
+      if (!user || !msg) {
+        alert('Remplissez pseudo et message');
+        return;
+      }
+
+      document.getElementById('minitwitt-message-sent').classList.remove('hidden');
+      minittForm.reset();
+      charCountEl.textContent = '0';
+
+      setTimeout(() => {
+        document.getElementById('minitwitt-message-sent').classList.add('hidden');
+      }, 3000);
+    });
+
+    // METEO API - Open-Meteo (gratuit, HTTPS, pas de clé API)
+    async function loadWeather() {
+      const cities = [
+        { id: 'paris', lat: 48.8566, lon: 2.3522 },
+        { id: 'marseille', lat: 43.2965, lon: 5.3698 },
+        { id: 'lyon', lat: 45.7640, lon: 4.8357 },
+        { id: 'lille', lat: 50.6292, lon: 3.0573 },
+        { id: 'bordeaux', lat: 44.8378, lon: -0.5792 },
+        { id: 'strasbourg', lat: 48.5734, lon: 7.7521 }
+      ];
+
+      const wmoCodeMap = {
+        0: 'Ciel dégagé', 1: 'Ciel clair', 2: 'Partiellement nuageux', 3: 'Nuageux',
+        45: 'Brouillard', 48: 'Brouillard givrant', 51: 'Bruine légère', 53: 'Bruine modérée',
+        55: 'Bruine intense', 61: 'Pluie légère', 63: 'Pluie modérée', 65: 'Pluie intense',
+        71: 'Neige légère', 73: 'Neige modérée', 75: 'Neige intense', 80: 'Averses légères',
+        81: 'Averses modérées', 82: 'Averses intenses', 85: 'Averses neige légère',
+        86: 'Averses neige intensa', 95: 'Orage', 96: 'Orage + neige', 99: 'Orage + grele'
+      };
+
+      for (const city of cities) {
+        try {
+          const response = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current_weather=true`
+          );
+          const data = await response.json();
+          const weather = data.current_weather;
+
+          const tempEl = document.getElementById(`temp-${city.id}`);
+          const descEl = document.getElementById(`desc-${city.id}`);
+
+          if (tempEl && weather) {
+            const temp = Math.round(weather.temperature);
+            tempEl.textContent = `${temp > 0 ? '+' : ''}${temp}°C`;
+            descEl.textContent = wmoCodeMap[weather.weathercode] || 'Variable';
+          }
+        } catch (err) {
+          console.error(`Erreur météo ${city.id}:`, err);
+        }
+      }
+    }
+
+    loadWeather();
+    setInterval(loadWeather, 600000);
+  </script>
+</body>
+</html>
